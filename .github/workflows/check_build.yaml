@@ -1,0 +1,29 @@
+# Check that the project can build
+name: Check build
+
+# Check links on the 2nd day of the month.
+# 2nd as the first letter of this repo is the 2nd letter in the alphabet.
+on:
+  push:
+  pull_request:
+  schedule:
+  - cron: "0 0 2 * *"
+
+jobs:
+  build_and_test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions-rs/toolchain@v1
+        with:
+          toolchain: stable
+
+      - name: Install prerequisites, from https://github.com/bevyengine/bevy/blob/main/docs/linux_dependencies.md#ubuntu
+        run: sudo apt-get install g++ pkg-config libx11-dev libasound2-dev libudev-dev libxkbcommon-x11-0
+
+      - uses: actions-rs/cargo@v1
+        with:
+          command: check
+          args: --release --all-features
+
+

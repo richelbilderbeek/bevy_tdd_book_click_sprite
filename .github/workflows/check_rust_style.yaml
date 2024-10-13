@@ -1,0 +1,27 @@
+# Check that the project follows a good Rust style
+name: Check Rust style
+
+# Check links on the 2nd day of the month.
+# 2nd as the first letter of this repo is the 2nd letter in the alphabet.
+on:
+  push:
+  pull_request:
+  schedule:
+  - cron: "0 0 2 * *"
+
+# Make sure CI fails on all warnings, including Clippy lints
+env:
+  RUSTFLAGS: "-Dwarnings"
+
+jobs:
+  check_rust_style:
+    runs-on: ubuntu-latest
+    steps:
+
+      - uses: actions/checkout@v4
+
+      - name: Install prerequisites, from https://github.com/bevyengine/bevy/blob/main/docs/linux_dependencies.md#ubuntu
+        run: sudo apt-get install g++ pkg-config libx11-dev libasound2-dev libudev-dev libxkbcommon-x11-0
+
+      - name: Run Clippy
+        run: cargo clippy --all-targets --all-features
