@@ -1,3 +1,4 @@
+use bevy::input::InputPlugin;
 use bevy::prelude::*;
 
 
@@ -19,12 +20,14 @@ pub fn create_app() -> App {
     if cfg!(test) {
         app.add_plugins(TaskPoolPlugin::default());
         app.add_plugins(AssetPlugin::default());
-        app.init_asset::<bevy::render::texture::Image>();
+        app.init_asset::<bevy::render::texture::Iusmage>();
+        app.add_plugins(InputPlugin);
     } else {
         app.add_plugins(DefaultPlugins);
     }
 
     app.add_systems(Startup, add_enemy);
+    app.add_systems(Update, respond_to_mouse_button_press);
 
     app
 }
@@ -56,6 +59,17 @@ fn get_enemy_has_texture(app: &mut App) -> bool {
     handle.is_strong()
 }
 
+
+fn respond_to_mouse_button_press(
+    mut query: Query<&mut Transform, With<Enemy>>,
+    input: Res<ButtonInput<MouseButton>>,
+) {
+    let mut player_position = query.single_mut();
+    if input.pressed(MouseButton::Left) {
+        // Do something
+        player_position.translation.x += 16.0;
+    }
+}
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -93,5 +107,25 @@ mod tests {
         let mut app = create_app();
         app.update();
         assert!(get_enemy_has_texture(&mut app));
+    }
+
+    #[test]
+    fn test_enemy_responds_to_mouse_button_press() {
+        let mut app = create_app();
+        assert!(app.is_plugin_added::<InputPlugin>());
+        app.update();
+
+        // Not moved yet
+        assert_eq!(Vec2::new(0.0, 0.0), get_enemy_position(&mut app));
+
+        // Press the left mouse button
+        app.world_mut()
+            .resource_mut::<ButtonInput<MouseButton>>()
+            .press(MouseButton::Left);
+
+        app.update();
+
+        // Position must have changed now
+        assert_ne!(Vec2::new(0.0, 0.0), get_enemy_position(&mut app));
     }
 }
