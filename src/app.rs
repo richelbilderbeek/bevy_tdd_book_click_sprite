@@ -5,22 +5,26 @@ use bevy::prelude::*;
 #[derive(Component)]
 pub struct Enemy;
 
-fn add_enemy(mut commands: Commands, asset_server: Res<AssetServer>) {
+fn add_enemy(mut commands: Commands) {
     commands.spawn((
         SpriteBundle {
-            texture: asset_server.load("bevy_bird_dark.png"),
+            transform: Transform {
+                scale: Vec3::new(100.0, 100.0, 1.0),
+                ..default()
+            },
             ..default()
         },
         Enemy,
     ));
 }
+
 pub fn create_app() -> App {
     let mut app = App::new();
 
     if cfg!(test) {
         app.add_plugins(TaskPoolPlugin::default());
-        app.add_plugins(AssetPlugin::default());
-        app.init_asset::<bevy::render::texture::Image>();
+        //app.add_plugins(AssetPlugin::default());
+        //app.init_asset::<bevy::render::texture::Image>();
         app.add_plugins(InputPlugin);
     } else {
         app.add_plugins(DefaultPlugins);
@@ -32,6 +36,8 @@ pub fn create_app() -> App {
     app
 }
 
+
+#[cfg(test)]
 fn count_n_enemies(app: &mut App) -> usize {
     let mut query = app.world_mut().query::<&Enemy>();
     query.iter(app.world()).len()
@@ -51,14 +57,6 @@ fn get_enemy_scale(app: &mut App) -> Vec2 {
     assert_eq!(transform.scale.z, 1.0); // 2D
     transform.scale.xy()
 }
-
-#[cfg(test)]
-fn get_enemy_has_texture(app: &mut App) -> bool {
-    let mut query = app.world_mut().query::<(&Handle<Image>, &Enemy)>();
-    let (handle, _) = query.single(app.world());
-    handle.is_strong()
-}
-
 
 fn respond_to_mouse_button_press(
     mut query: Query<&mut Transform, With<Enemy>>,
@@ -99,14 +97,7 @@ mod tests {
     fn test_enemy_has_the_default_scale() {
         let mut app = create_app();
         app.update();
-        assert_eq!(get_enemy_scale(&mut app), Vec2::new(1.0, 1.0));
-    }
-
-    #[test]
-    fn test_enemy_has_a_texture() {
-        let mut app = create_app();
-        app.update();
-        assert!(get_enemy_has_texture(&mut app));
+        assert_eq!(get_enemy_scale(&mut app), Vec2::new(100.0, 100.0));
     }
 
     #[test]
