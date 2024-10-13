@@ -59,15 +59,40 @@ fn get_enemy_scale(app: &mut App) -> Vec2 {
 }
 
 fn respond_to_mouse_button_press(
-    mut query: Query<&mut Transform, With<Enemy>>,
+    mut enemy_query: Query<&mut Transform, With<Enemy>>,
+    window_query: Query<&Window>,
+    camera_q: Query<(&Camera, &GlobalTransform)>,
     input: Res<ButtonInput<MouseButton>>,
 ) {
-    let mut player_position = query.single_mut();
     if input.pressed(MouseButton::Left) {
         // Do something
-        player_position.translation.x += 16.0;
+        let window = window_query.single();
+        let (camera, camera_transform) = camera_q.single();
+
+        // From https://github.com/bevyengine/bevy/discussions/7970
+        if let Some(world_position) = window
+            .cursor_position()
+            .and_then(|cursor| camera.viewport_to_world_2d(camera_transform, cursor))
+        {
+            //eprintln!("World coords: {}/{}", world_position.x, world_position.y);
+            let mut enemy_transform = enemy_query.single_mut();
+            let enemy_min_x = enemy_transform.translation.x - (enemy_transform.scale.x / 2.0);
+            let enemy_min_y = enemy_transform.translation.y - (enemy_transform.scale.y / 2.0);
+            let enemy_max_x = enemy_transform.translation.x + (enemy_transform.scale.x / 2.0);
+            let enemy_max_y = enemy_transform.translation.y + (enemy_transform.scale.y / 2.0);
+            if world_position.x > enemy_min_x && world_position.x < enemy_max_x &&
+                world_position.y > enemy_min_y && world_position.y < enemy_max_y {
+                // Move away effect
+                let dx = world_position.x - enemy_transform.translation.x;
+                let dy = world_position.y - enemy_transform.translation.y;
+                enemy_transform.translation.x -= dx;
+                enemy_transform.translation.y -= dy;
+            }
+
+        }
     }
 }
+
 #[cfg(test)]
 mod tests {
     use super::*;
