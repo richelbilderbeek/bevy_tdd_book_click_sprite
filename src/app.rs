@@ -20,7 +20,7 @@ pub fn create_app() -> App {
     if cfg!(test) {
         app.add_plugins(TaskPoolPlugin::default());
         app.add_plugins(AssetPlugin::default());
-        app.init_asset::<bevy::render::texture::Iusmage>();
+        app.init_asset::<bevy::render::texture::Image>();
         app.add_plugins(InputPlugin);
     } else {
         app.add_plugins(DefaultPlugins);
