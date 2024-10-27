@@ -115,6 +115,7 @@ fn respond_to_mouse_button_press(
         let (camera, camera_transform) = camera_q.single();
 
         if !is_cursor_pos_in_viewport(camera, camera_transform, cursor_pos) {
+            // If the cursor is in the window, the cursor is in the viewport in this case
             assert!("Should never happen" == "?");
             return()
         }
