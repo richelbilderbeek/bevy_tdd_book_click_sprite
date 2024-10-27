@@ -1,9 +1,14 @@
 use bevy::input::InputPlugin;
 use bevy::prelude::*;
+use bevy::window::PrimaryWindow;
 
 
 #[derive(Component)]
 pub struct Enemy;
+
+fn add_camera(mut commands: Commands) {
+    commands.spawn(Camera2dBundle::default());
+}
 
 fn add_enemy(mut commands: Commands) {
     commands.spawn((
@@ -30,10 +35,12 @@ pub fn create_app() -> App {
         //app.add_plugins(AssetPlugin::default());
         //app.init_asset::<bevy::render::texture::Image>();
         app.add_plugins(InputPlugin);
+        app.add_plugins(WindowPlugin::default());
+
     } else {
         app.add_plugins(DefaultPlugins);
     }
-
+    app.add_systems(Startup, add_camera);
     app.add_systems(Startup, add_enemy);
     app.add_systems(Update, respond_to_mouse_button_press);
 
@@ -64,13 +71,21 @@ fn get_enemy_scale(app: &mut App) -> Vec2 {
 
 fn respond_to_mouse_button_press(
     mut enemy_query: Query<&mut Transform, With<Enemy>>,
-    window_query: Query<&Window>,
+    window_query: Query<&Window, With<PrimaryWindow>>,
     camera_q: Query<(&Camera, &GlobalTransform)>,
     input: Res<ButtonInput<MouseButton>>,
 ) {
     if input.pressed(MouseButton::Left) {
         // Do something
+        assert_ne!(0, window_query.iter().len());
+        assert_ne!(2, window_query.iter().len());
+        assert_eq!(1, window_query.iter().len());
         let window = window_query.single();
+
+        assert_ne!(0, camera_q.iter().len());
+        assert_ne!(2, camera_q.iter().len());
+        assert_eq!(1, camera_q.iter().len());
+
         let (camera, camera_transform) = camera_q.single();
 
         // From https://github.com/bevyengine/bevy/discussions/7970
