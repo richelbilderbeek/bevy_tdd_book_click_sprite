@@ -48,6 +48,29 @@ pub fn create_app() -> App {
 }
 
 
+fn is_cursor_in_window(window: &Window) -> bool {
+    window.cursor_position().is_some()
+}
+
+/// The cursor position in this window in logical pixels
+fn get_cursor_position_logical(window: &Window) -> Vec2 {
+    assert!(is_cursor_in_window(window));
+    window.cursor_position().unwrap()
+}
+
+fn get_world_position(camera: &Camera, global_transform: &GlobalTransform, cursor_pos: Vec2) -> Vec2 {
+    assert!(is_cursor_pos_in_viewport(camera, global_transform, cursor_pos));
+    camera.viewport_to_world_2d(global_transform, cursor_pos).unwrap()
+}
+
+
+// @param cursor_pos: the logical cursor position
+fn is_cursor_pos_in_viewport(camera: &Camera, global_transform: &GlobalTransform, cursor_pos: Vec2) -> bool {
+    camera.viewport_to_world_2d(global_transform, cursor_pos).is_some()
+}
+
+
+
 #[cfg(test)]
 fn count_n_enemies(app: &mut App) -> usize {
     let mut query = app.world_mut().query::<&Enemy>();
@@ -81,33 +104,34 @@ fn respond_to_mouse_button_press(
         assert_ne!(2, window_query.iter().len());
         assert_eq!(1, window_query.iter().len());
         let window = window_query.single();
+        if !is_cursor_in_window(window) {
+            return()
+        }
+        let cursor_pos = get_cursor_position_logical(window);
 
         assert_ne!(0, camera_q.iter().len());
         assert_ne!(2, camera_q.iter().len());
         assert_eq!(1, camera_q.iter().len());
-
         let (camera, camera_transform) = camera_q.single();
 
-        // From https://github.com/bevyengine/bevy/discussions/7970
-        if let Some(world_position) = window
-            .cursor_position()
-            .and_then(|cursor| camera.viewport_to_world_2d(camera_transform, cursor))
-        {
-            //eprintln!("World coords: {}/{}", world_position.x, world_position.y);
-            let mut enemy_transform = enemy_query.single_mut();
-            let enemy_min_x = enemy_transform.translation.x - (enemy_transform.scale.x / 2.0);
-            let enemy_min_y = enemy_transform.translation.y - (enemy_transform.scale.y / 2.0);
-            let enemy_max_x = enemy_transform.translation.x + (enemy_transform.scale.x / 2.0);
-            let enemy_max_y = enemy_transform.translation.y + (enemy_transform.scale.y / 2.0);
-            if world_position.x > enemy_min_x && world_position.x < enemy_max_x &&
-                world_position.y > enemy_min_y && world_position.y < enemy_max_y {
-                // Move away effect
-                let dx = world_position.x - enemy_transform.translation.x;
-                let dy = world_position.y - enemy_transform.translation.y;
-                enemy_transform.translation.x -= dx;
-                enemy_transform.translation.y -= dy;
-            }
+        if !is_cursor_pos_in_viewport(camera, camera_transform, cursor_pos) {
+            assert!("Should never happen" == "?");
+            return()
+        }
+        let world_position = get_world_position(camera, camera_transform, cursor_pos);
 
+        let mut enemy_transform = enemy_query.single_mut();
+        let enemy_min_x = enemy_transform.translation.x - (enemy_transform.scale.x / 2.0);
+        let enemy_min_y = enemy_transform.translation.y - (enemy_transform.scale.y / 2.0);
+        let enemy_max_x = enemy_transform.translation.x + (enemy_transform.scale.x / 2.0);
+        let enemy_max_y = enemy_transform.translation.y + (enemy_transform.scale.y / 2.0);
+        if world_position.x > enemy_min_x && world_position.x < enemy_max_x &&
+            world_position.y > enemy_min_y && world_position.y < enemy_max_y {
+            // Move away effect
+            let dx = world_position.x - enemy_transform.translation.x;
+            let dy = world_position.y - enemy_transform.translation.y;
+            enemy_transform.translation.x -= dx;
+            enemy_transform.translation.y -= dy;
         }
     }
 }
