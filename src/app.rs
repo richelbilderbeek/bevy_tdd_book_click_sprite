@@ -105,7 +105,7 @@ fn respond_to_mouse_button_press(
         assert_eq!(1, window_query.iter().len());
         let window = window_query.single();
         if !is_cursor_in_window(window) {
-            return()
+            return
         }
         let cursor_pos = get_cursor_position_logical(window);
 
@@ -117,7 +117,7 @@ fn respond_to_mouse_button_press(
         if !is_cursor_pos_in_viewport(camera, camera_transform, cursor_pos) {
             // If the cursor is in the window, the cursor is in the viewport in this case
             assert!("Should never happen" == "?");
-            return()
+            return
         }
         let world_position = get_world_position(camera, camera_transform, cursor_pos);
 
