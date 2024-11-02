@@ -170,6 +170,15 @@ mod tests {
     }
 
     #[test]
+    fn test_set_cursor_position_logical() {
+        let mut app = create_app();
+        assert!(app.is_plugin_added::<InputPlugin>());
+        app.update();
+        let pos_before = get_cursor_position_logical();
+
+    }
+
+    #[test]
     fn test_enemy_responds_to_mouse_button_press() {
         let mut app = create_app();
         assert!(app.is_plugin_added::<InputPlugin>());
@@ -177,6 +186,8 @@ mod tests {
 
         // Not moved yet
         assert_eq!(Vec2::new(0.0, 0.0), get_enemy_position(&mut app));
+
+
 
         // Press the left mouse button
         app.world_mut()
