@@ -12,7 +12,7 @@ fn add_camera(mut commands: Commands) {
 
 fn add_enemy(mut commands: Commands) {
     commands.spawn((
-        SpriteBundle {
+        Sprite {
             transform: Transform {
                 scale: Vec3::new(100.0, 100.0, 1.0),
                 ..default()
