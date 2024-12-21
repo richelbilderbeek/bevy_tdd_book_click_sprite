@@ -7,7 +7,7 @@ use bevy::window::PrimaryWindow;
 pub struct Enemy;
 
 fn add_camera(mut commands: Commands) {
-    commands.spawn(Camera2dBundle::default());
+    commands.spawn(Camera2d::default());
 }
 
 fn add_enemy(mut commands: Commands) {
