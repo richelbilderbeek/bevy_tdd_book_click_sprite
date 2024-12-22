@@ -12,11 +12,9 @@ fn add_camera(mut commands: Commands) {
 
 fn add_enemy(mut commands: Commands) {
     commands.spawn((
-        Sprite {
-            transform: Transform {
-                scale: Vec3::new(100.0, 100.0, 1.0),
-                ..default()
-            },
+        Sprite::default(),
+        Transform {
+            scale: Vec3::new(100.0, 100.0, 1.0),
             ..default()
         },
         Enemy,
@@ -52,11 +50,21 @@ fn is_cursor_in_window(window: &Window) -> bool {
     window.cursor_position().is_some()
 }
 
+fn is_cursor_in_window_mut(window: &Mut<Window>) -> bool {
+    window.cursor_position().is_some()
+}
+
 /// The cursor position in this window in logical pixels
 fn get_cursor_position_logical(window: &Window) -> Vec2 {
     assert!(is_cursor_in_window(window));
     window.cursor_position().unwrap()
 }
+
+fn get_cursor_position_logical_mut(window: &Mut<Window>) -> Vec2 {
+    assert!(is_cursor_in_window_mut(window));
+    window.cursor_position().unwrap()
+}
+
 
 fn get_world_position(camera: &Camera, global_transform: &GlobalTransform, cursor_pos: Vec2) -> Vec2 {
     assert!(is_cursor_pos_in_viewport(camera, global_transform, cursor_pos));
@@ -66,7 +74,7 @@ fn get_world_position(camera: &Camera, global_transform: &GlobalTransform, curso
 
 // @param cursor_pos: the logical cursor position
 fn is_cursor_pos_in_viewport(camera: &Camera, global_transform: &GlobalTransform, cursor_pos: Vec2) -> bool {
-    camera.viewport_to_world_2d(global_transform, cursor_pos).is_some()
+    camera.viewport_to_world_2d(global_transform, cursor_pos).is_ok()
 }
 
 
@@ -137,6 +145,12 @@ fn respond_to_mouse_button_press(
     }
 }
 
+/// The cursor position in this window in logical pixels
+fn set_cursor_position_logical(window: &mut Mut<Window>, position: Vec2) {
+    window.set_cursor_position(Some(position));
+}
+
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -174,8 +188,14 @@ mod tests {
         let mut app = create_app();
         assert!(app.is_plugin_added::<InputPlugin>());
         app.update();
-        let pos_before = get_cursor_position_logical();
-
+        let mut query = app.world_mut().query::<&mut Window>();
+        let mut window = query.single_mut(app.world_mut());
+        let pos_before = get_cursor_position_logical_mut(&window);
+        let new_pos = pos_before + Vec2::new(1.2, 3.4);
+        set_cursor_position_logical(&mut window, new_pos);
+        let pos_after = get_cursor_position_logical_mut(&window);
+        assert_ne!(pos_before, pos_after);
+        assert_eq!(new_pos, pos_after);
     }
 
     #[test]
@@ -186,8 +206,6 @@ mod tests {
 
         // Not moved yet
         assert_eq!(Vec2::new(0.0, 0.0), get_enemy_position(&mut app));
-
-
 
         // Press the left mouse button
         app.world_mut()
